@@ -1,4 +1,4 @@
-DROP SCHEMA universidade CASCADE;
+DROP SCHEMA IF EXISTS universidade CASCADE;
 
 CREATE SCHEMA universidade;
 
