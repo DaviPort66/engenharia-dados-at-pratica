@@ -41,3 +41,13 @@ def executar(sql, params=None, fetch=False):
         raise ValueError(f"Erro no banco: {e.pgerror or e}")
     finally:
         conn.close()
+
+
+def atualizar_campos(tabela, campos, permitidos, condicao, params_cond):
+    """Monta e executa um UPDATE só com os campos informados (e permitidos)."""
+    campos = {k: v for k, v in campos.items() if k in permitidos}
+    if not campos:
+        raise ValueError("Nenhum campo para atualizar.")
+    sets = ", ".join(f"{col} = %s" for col in campos)
+    return executar(f"UPDATE {tabela} SET {sets} WHERE {condicao}",
+                    (*campos.values(), *params_cond))
