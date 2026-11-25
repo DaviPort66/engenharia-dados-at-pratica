@@ -68,10 +68,12 @@ def u_inserir():
     tels = pedir_lista("Telefones (separados por vírgula): ")
     login = ask("Login: ")
     senha = ask("Senha: ")
-    efeito("antes", usuario.buscar, cpf)
+    print(f"  [banco | antes] {len(usuario.listar())} usuários cadastrados")
+    efeito("antes, este CPF", usuario.buscar, cpf)
     n = usuario.inserir(cpf, nome, nasc, emails, tels, login, senha)
     print(f"OK: {n} usuário inserido.")
-    efeito("depois", usuario.buscar, cpf)
+    print(f"  [banco | depois] {len(usuario.listar())} usuários cadastrados")
+    efeito("depois, este CPF", usuario.buscar, cpf)
 
 
 def u_atualizar():
@@ -106,10 +108,12 @@ def p_inserir():
     data_adm = ask("Data de admissão (AAAA-MM-DD): ")
     jornada = ask("Jornada: ")
     salario = ask("Salário: ", float)
-    efeito("antes", professor.buscar, mat)
+    print(f"  [banco | antes] {len(professor.listar())} professores cadastrados")
+    efeito("antes, esta matrícula", professor.buscar, mat)
     n = professor.inserir(mat, cpf, depto, formacao, data_adm, jornada, salario)
     print(f"OK: {n} professor inserido.")
-    efeito("depois", professor.buscar, mat)
+    print(f"  [banco | depois] {len(professor.listar())} professores cadastrados")
+    efeito("depois, esta matrícula", professor.buscar, mat)
 
 
 def p_atualizar():
