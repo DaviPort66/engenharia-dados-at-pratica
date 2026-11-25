@@ -3,7 +3,7 @@ import psycopg2
 from psycopg2 import errors
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(os.getenv("ENV_FILE", ".env"))
 
 
 def conectar():
@@ -14,6 +14,7 @@ def conectar():
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         options="-c search_path=universidade,public",
+        sslmode=os.getenv("DB_SSLMODE", "prefer"),
     )
 
 

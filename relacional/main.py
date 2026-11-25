@@ -21,13 +21,18 @@ def pedir_lista(msg):
 
 def mostrar(linhas):
     if not linhas:
-        print("Nenhum registro encontrado.")
+        print("  Nenhum registro encontrado.")
     for l in linhas:
-        print(l)
+        print(" ", l)
+
+
+def efeito(rotulo, consulta, *args):
+    """Consulta o banco e mostra o estado atual do registro."""
+    print(f"  [banco | {rotulo}]")
+    mostrar(consulta(*args))
 
 
 def coletar(campos):
-    """campos: lista de (coluna, pergunta, conversor). Retorna só os preenchidos."""
     out = {}
     for col, msg, conv in campos:
         v = ask(f"{msg} (Enter mantém): ", conv)
@@ -37,7 +42,6 @@ def coletar(campos):
 
 
 def rodar_menu(titulo, acoes):
-    """acoes: dict {'1': ('Descrição', função)}"""
     while True:
         print(f"\n--- {titulo} ---")
         for k, (nome, _) in acoes.items():
@@ -55,18 +59,19 @@ def rodar_menu(titulo, acoes):
             print(f"Erro: {e}")
 
 
-def resultado(n, ok, vazio):
-    print(f"OK: {ok}" if n else vazio)
-
-
 # ---------- usuário ----------
 def u_inserir():
-    n = usuario.inserir(ask("CPF (só números): ", int, True), ask("Nome: ", obrigatorio=True),
-                        ask("Data de nascimento (AAAA-MM-DD, opcional): "),
-                        pedir_lista("E-mails (separados por vírgula): "),
-                        pedir_lista("Telefones (separados por vírgula): "),
-                        ask("Login: "), ask("Senha: "))
+    cpf = ask("CPF (só números): ", int, True)
+    nome = ask("Nome: ", obrigatorio=True)
+    nasc = ask("Data de nascimento (AAAA-MM-DD, opcional): ")
+    emails = pedir_lista("E-mails (separados por vírgula): ")
+    tels = pedir_lista("Telefones (separados por vírgula): ")
+    login = ask("Login: ")
+    senha = ask("Senha: ")
+    efeito("antes", usuario.buscar, cpf)
+    n = usuario.inserir(cpf, nome, nasc, emails, tels, login, senha)
     print(f"OK: {n} usuário inserido.")
+    efeito("depois", usuario.buscar, cpf)
 
 
 def u_atualizar():
@@ -77,24 +82,34 @@ def u_atualizar():
     if emails: campos["email"] = emails
     tels = pedir_lista("Novos telefones (Enter mantém): ")
     if tels: campos["telefone"] = tels
+    efeito("antes", usuario.buscar, cpf)
     n = usuario.atualizar(cpf, campos)
-    resultado(n, f"{n} usuário atualizado.", "Nenhum usuário com esse CPF.")
+    print(f"OK: {n} usuário atualizado." if n else "Nenhum usuário com esse CPF.")
+    efeito("depois", usuario.buscar, cpf)
 
 
 def u_deletar():
-    n = usuario.deletar(ask("CPF do usuário: ", int, True))
-    resultado(n, f"{n} usuário removido.", "Nenhum usuário com esse CPF.")
+    cpf = ask("CPF do usuário: ", int, True)
+    efeito("antes", usuario.buscar, cpf)
+    n = usuario.deletar(cpf)
+    print(f"OK: {n} usuário removido." if n else "Nenhum usuário com esse CPF.")
+    efeito("depois", usuario.buscar, cpf)
 
 
 # ---------- professor ----------
 def p_inserir():
     print("Formação: Graduação, Especialização, Mestrado, Doutorado | Jornada: 20h, 40h, DE")
-    n = professor.inserir(ask("Matrícula (até 7 caracteres): ", obrigatorio=True),
-                          ask("CPF do usuário (opcional): ", int),
-                          ask("Departamento (ex.: DCOMP): "), ask("Formação: "),
-                          ask("Data de admissão (AAAA-MM-DD): "), ask("Jornada: "),
-                          ask("Salário: ", float))
+    mat = ask("Matrícula (até 7 caracteres): ", obrigatorio=True)
+    cpf = ask("CPF do usuário (opcional): ", int)
+    depto = ask("Departamento (ex.: DCOMP): ")
+    formacao = ask("Formação: ")
+    data_adm = ask("Data de admissão (AAAA-MM-DD): ")
+    jornada = ask("Jornada: ")
+    salario = ask("Salário: ", float)
+    efeito("antes", professor.buscar, mat)
+    n = professor.inserir(mat, cpf, depto, formacao, data_adm, jornada, salario)
     print(f"OK: {n} professor inserido.")
+    efeito("depois", professor.buscar, mat)
 
 
 def p_atualizar():
@@ -103,53 +118,81 @@ def p_atualizar():
                       ("formacao", "Nova formação", str), ("data_admissao", "Nova data de admissão", str),
                       ("tipo_jornada_trabalho", "Nova jornada (20h/40h/DE)", str),
                       ("salario", "Novo salário", float)])
+    efeito("antes", professor.buscar, mat)
     n = professor.atualizar(mat, campos)
-    resultado(n, f"{n} professor atualizado.", "Nenhum professor com essa matrícula.")
+    print(f"OK: {n} professor atualizado." if n else "Nenhum professor com essa matrícula.")
+    efeito("depois", professor.buscar, mat)
 
 
 def p_deletar():
-    n = professor.deletar(ask("Matrícula do professor: ", obrigatorio=True))
-    resultado(n, f"{n} professor removido.", "Nenhum professor com essa matrícula.")
+    mat = ask("Matrícula do professor: ", obrigatorio=True)
+    efeito("antes", professor.buscar, mat)
+    n = professor.deletar(mat)
+    print(f"OK: {n} professor removido." if n else "Nenhum professor com essa matrícula.")
+    efeito("depois", professor.buscar, mat)
 
 
 # ---------- turma ----------
 def t_inserir():
-    id_nova = turma.inserir(ask("Código da disciplina (ex.: COMP0123): ", obrigatorio=True),
-                            ask("Número da turma: ", int, True),
-                            ask("Ano: ", int, True), ask("Semestre (1 ou 2): ", int, True))
+    cod = ask("Código da disciplina (ex.: COMP0123): ", obrigatorio=True)
+    numero = ask("Número da turma: ", int, True)
+    ano = ask("Ano: ", int, True)
+    semestre = ask("Semestre (1 ou 2): ", int, True)
+    print(f"  [banco | antes] {len(turma.listar())} turmas cadastradas")
+    id_nova = turma.inserir(cod, numero, ano, semestre)
     print(f"OK: turma inserida com id_turma = {id_nova}.")
+    print(f"  [banco | depois] {len(turma.listar())} turmas cadastradas")
+    efeito("nova turma", turma.buscar, id_nova)
 
 
 def t_atualizar():
     id_t = ask("id_turma: ", int, True)
     campos = coletar([("cod_disc", "Nova disciplina", str), ("numero", "Novo número", int),
                       ("ano", "Novo ano", int), ("semestre", "Novo semestre", int)])
+    efeito("antes", turma.buscar, id_t)
     n = turma.atualizar(id_t, campos)
-    resultado(n, f"{n} turma atualizada.", "Nenhuma turma com esse id.")
+    print(f"OK: {n} turma atualizada." if n else "Nenhuma turma com esse id.")
+    efeito("depois", turma.buscar, id_t)
 
 
 def t_deletar():
     print("Atenção: apagar a turma também apaga seus registros em leciona e cursa (CASCADE).")
-    n = turma.deletar(ask("id_turma: ", int, True))
-    resultado(n, f"{n} turma removida.", "Nenhuma turma com esse id.")
+    id_t = ask("id_turma: ", int, True)
+    efeito("turma - antes", turma.buscar, id_t)
+    efeito("leciona dessa turma - antes", leciona.buscar_por_turma, id_t)
+    n = turma.deletar(id_t)
+    print(f"OK: {n} turma removida." if n else "Nenhuma turma com esse id.")
+    efeito("turma - depois", turma.buscar, id_t)
+    efeito("leciona dessa turma - depois", leciona.buscar_por_turma, id_t)
 
 
 # ---------- leciona ----------
 def l_inserir():
-    n = leciona.inserir(ask("id_turma: ", int, True), ask("Matrícula do professor: ", obrigatorio=True))
+    id_t = ask("id_turma: ", int, True)
+    mat = ask("Matrícula do professor: ", obrigatorio=True)
+    efeito("antes", leciona.buscar_por_turma, id_t)
+    n = leciona.inserir(id_t, mat)
     print(f"OK: {n} vínculo inserido.")
+    efeito("depois", leciona.buscar_por_turma, id_t)
 
 
 def l_trocar():
-    n = leciona.trocar_professor(ask("id_turma: ", int, True),
-                                 ask("Matrícula atual: ", obrigatorio=True),
-                                 ask("Nova matrícula: ", obrigatorio=True))
-    resultado(n, f"{n} vínculo atualizado.", "Vínculo não encontrado.")
+    id_t = ask("id_turma: ", int, True)
+    atual = ask("Matrícula atual: ", obrigatorio=True)
+    novo = ask("Nova matrícula: ", obrigatorio=True)
+    efeito("antes", leciona.buscar_por_turma, id_t)
+    n = leciona.trocar_professor(id_t, atual, novo)
+    print(f"OK: {n} vínculo atualizado." if n else "Vínculo não encontrado.")
+    efeito("depois", leciona.buscar_por_turma, id_t)
 
 
 def l_deletar():
-    n = leciona.deletar(ask("id_turma: ", int, True), ask("Matrícula do professor: ", obrigatorio=True))
-    resultado(n, f"{n} vínculo removido.", "Vínculo não encontrado.")
+    id_t = ask("id_turma: ", int, True)
+    mat = ask("Matrícula do professor: ", obrigatorio=True)
+    efeito("antes", leciona.buscar_por_turma, id_t)
+    n = leciona.deletar(id_t, mat)
+    print(f"OK: {n} vínculo removido." if n else "Vínculo não encontrado.")
+    efeito("depois", leciona.buscar_por_turma, id_t)
 
 
 MENUS = {

@@ -566,3 +566,8 @@ INSERT INTO universidade.cursa VALUES('E112', 25,9.0);
 
 
 
+
+-- Sincroniza as sequences com os ids inseridos explicitamente acima
+SELECT setval('universidade.seq_turma', (SELECT MAX(id_turma) FROM universidade.turma));
+SELECT setval(pg_get_serial_sequence('universidade.curso', 'idcurso'), (SELECT MAX(idcurso) FROM universidade.curso));
+SELECT setval(pg_get_serial_sequence('universidade.vinculo', 'idvinculo'), (SELECT MAX(idvinculo) FROM universidade.vinculo));
